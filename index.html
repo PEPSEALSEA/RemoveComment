@@ -132,8 +132,8 @@
         const pasteButton = document.getElementById('pasteButton');
 
         function removeComments(code) {
-            // Remove single-line comments (//)
-            let result = code.replace(/\/\/.*$/gm, '');
+            // Remove single-line comments (//) but preserve URLs starting with http:// or https://
+            let result = code.replace(/(?<!https?:)\/\/.*$/gm, '');
             // Remove multi-line comments (/* */)
             result = result.replace(/\/\*[\s\S]*?\*\//g, '');
             // Remove extra blank lines
