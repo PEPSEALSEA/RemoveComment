@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove C# Comments</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'pulse': 'pulse 0.3s ease-in-out',
+                        'bounce': 'bounce 0.3s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        pulse: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.2)' },
+                            '100%': { transform: 'scale(1)' },
+                        },
+                        bounce: {
+                            '0%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-gradient {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+        }
+        .bg-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .click-button {
+            transition: all 0.2s ease;
+        }
+        .click-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        }
+        .fancy-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .fancy-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+        .fancy-button:hover::before {
+            left: 100%;
+        }
+        .fancy-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gradient text-gray-100 font-['Kanit'] min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <div class="bg-card rounded-2xl p-8 mx-auto border border-slate-700/50 animate-fade-in">
+            <h1 class="text-4xl font-bold gradient-text mb-6 text-center">ลบคอมเมนต์ในโค้ด C#</h1>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-lg">โค้ด C# (วางโค้ดที่มีคอมเมนต์):</label>
+                        <button id="pasteButton" class="click-button fancy-button bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600">วาง</button>
+                    </div>
+                    <textarea id="inputCode" class="w-full h-96 bg-slate-800/50 text-gray-100 p-4 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="วางโค้ด C# ที่นี่..."></textarea>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-lg">ผลลัพธ์ (โค้ดที่ลบคอมเมนต์):</label>
+                        <button id="copyButton" class="click-button fancy-button bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600">คัดลอก</button>
+                    </div>
+                    <textarea id="outputCode" class="w-full h-96 bg-slate-800/50 text-gray-100 p-4 rounded-lg border border-slate-700 focus:outline-none" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const inputCode = document.getElementById('inputCode');
+        const outputCode = document.getElementById('outputCode');
+        const copyButton = document.getElementById('copyButton');
+        const pasteButton = document.getElementById('pasteButton');
+
+        function removeComments(code) {
+            // Remove single-line comments (//)
+            let result = code.replace(/\/\/.*$/gm, '');
+            // Remove multi-line comments (/* */)
+            result = result.replace(/\/\*[\s\S]*?\*\//g, '');
+            // Remove extra blank lines
+            result = result.replace(/\n\s*\n/g, '\n').trim();
+            return result;
+        }
+
+        inputCode.addEventListener('input', () => {
+            const code = inputCode.value;
+            const cleanedCode = removeComments(code);
+            outputCode.value = cleanedCode;
+        });
+
+        copyButton.addEventListener('click', () => {
+            outputCode.select();
+            navigator.clipboard.writeText(outputCode.value);
+            copyButton.classList.add('animate-pulse');
+            copyButton.textContent = 'คัดลอกแล้ว!';
+            setTimeout(() => {
+                copyButton.classList.remove('animate-pulse');
+                copyButton.textContent = 'คัดลอก';
+            }, 1000);
+        });
+
+        pasteButton.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                inputCode.value = text;
+                const cleanedCode = removeComments(text);
+                outputCode.value = cleanedCode;
+                pasteButton.classList.add('animate-pulse');
+                pasteButton.textContent = 'วางแล้ว!';
+                setTimeout(() => {
+                    pasteButton.classList.remove('animate-pulse');
+                    pasteButton.textContent = 'วาง';
+                }, 1000);
+            } catch (err) {
+                console.error('Failed to paste: ', err);
+            }
+        });
+    </script>
+</body>
+</html>
