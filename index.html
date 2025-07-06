@@ -117,7 +117,6 @@
 
         .highlight-input {
             position: relative;
-            overflow: hidden;
         }
 
         .highlight-layer {
@@ -129,27 +128,35 @@
             pointer-events: none;
             white-space: pre-wrap;
             word-wrap: break-word;
-            font-family: monospace;
+            font-family: 'Mali', monospace;
             font-size: 14px;
-            line-height: 1.4;
+            line-height: 1.5;
             padding: 1rem;
             z-index: 1;
             overflow: auto;
             background: transparent;
             color: transparent;
+            border: 1px solid transparent;
+            border-radius: 0.5rem;
         }
 
         .highlight-layer .comment {
-            background-color: rgba(239, 68, 68, 0.3);
+            background-color: rgba(255, 0, 0, 0.6);
             border-radius: 3px;
-            padding: 1px 2px;
+            padding: 0px 2px;
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+            font-weight: 500;
         }
 
         .input-textarea {
             position: relative;
             z-index: 2;
-            background: transparent;
+            background: rgba(30, 41, 59, 0.5);
             color: #f1f5f9;
+            font-family: 'Mali', monospace;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .fullscreen-overlay {
@@ -166,17 +173,56 @@
             padding: 2rem;
         }
 
-        .fullscreen-textarea {
+        .fullscreen-container {
             flex: 1;
             margin-top: 1rem;
+            position: relative;
+        }
+
+        .fullscreen-textarea {
+            width: 100%;
+            height: 100%;
             background: rgba(30, 41, 59, 0.8);
             border: 1px solid #475569;
             border-radius: 0.5rem;
             padding: 1rem;
             color: #f1f5f9;
-            font-family: 'Mali', sans-serif;
+            font-family: 'Mali', monospace;
             font-size: 16px;
+            line-height: 1.5;
             resize: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .fullscreen-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Mali', monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            padding: 1rem;
+            z-index: 1;
+            overflow: auto;
+            background: transparent;
+            color: transparent;
+            border: 1px solid transparent;
+            border-radius: 0.5rem;
+        }
+
+        .fullscreen-highlight .comment {
+            background-color: rgba(250, 0, 0, 0.6);
+            border-radius: 3px;
+            padding: 0px 2px;
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+            font-weight: 500;
         }
 
         .icon-button {
@@ -258,7 +304,10 @@
             <button id="closeFullscreenButton"
                 class="click-button fancy-button bg-red-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-600">ปิด</button>
         </div>
-        <textarea id="fullscreenTextarea" class="fullscreen-textarea" readonly></textarea>
+        <div class="fullscreen-container">
+            <div id="fullscreenHighlight" class="fullscreen-highlight"></div>
+            <textarea id="fullscreenTextarea" class="fullscreen-textarea" readonly></textarea>
+        </div>
     </div>
 
     <script>
@@ -272,6 +321,7 @@
         const fullscreenOverlay = document.getElementById('fullscreenOverlay');
         const fullscreenTitle = document.getElementById('fullscreenTitle');
         const fullscreenTextarea = document.getElementById('fullscreenTextarea');
+        const fullscreenHighlight = document.getElementById('fullscreenHighlight');
         const closeFullscreenButton = document.getElementById('closeFullscreenButton');
 
         function highlightComments(code) {
@@ -281,11 +331,8 @@
         }
 
         function removeComments(code) {
-
             let result = code.replace(/(?<!https?:)\/\/.*$/gm, '');
-
             result = result.replace(/\/\*[\s\S]*?\*\//g, '');
-
             result = result.replace(/\n\s*\n/g, '\n').trim();
             return result;
         }
@@ -296,9 +343,20 @@
             highlightLayer.innerHTML = highlighted;
         }
 
+        function updateFullscreenHighlighting() {
+            const code = fullscreenTextarea.value;
+            const highlighted = highlightComments(code);
+            fullscreenHighlight.innerHTML = highlighted;
+        }
+
         function syncScroll() {
             highlightLayer.scrollTop = inputCode.scrollTop;
             highlightLayer.scrollLeft = inputCode.scrollLeft;
+        }
+
+        function syncFullscreenScroll() {
+            fullscreenHighlight.scrollTop = fullscreenTextarea.scrollTop;
+            fullscreenHighlight.scrollLeft = fullscreenTextarea.scrollLeft;
         }
 
         inputCode.addEventListener('input', () => {
@@ -309,6 +367,14 @@
         });
 
         inputCode.addEventListener('scroll', syncScroll);
+
+        fullscreenTextarea.addEventListener('input', () => {
+            if (!fullscreenTextarea.readOnly) {
+                updateFullscreenHighlighting();
+            }
+        });
+
+        fullscreenTextarea.addEventListener('scroll', syncFullscreenScroll);
 
         copyButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -324,17 +390,14 @@
                     }, 1000);
                 }).catch(err => {
                     console.error('Failed to copy: ', err);
-
                     fallbackCopyTextToClipboard(outputCode.value);
                 });
             } else {
-
                 fallbackCopyTextToClipboard(outputCode.value);
             }
         });
 
         function fallbackCopyTextToClipboard(text) {
-
             const textArea = document.createElement("textarea");
             textArea.value = text;
             textArea.style.position = "fixed";
@@ -362,9 +425,12 @@
         pasteButton.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
+            // แก้ไข: ตรวจสอบว่าไม่อยู่ในโหมด fullscreen
             if (!fullscreenOverlay.classList.contains('hidden')) {
                 return;
             }
+            
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     const text = await navigator.clipboard.readText();
@@ -393,6 +459,7 @@
             fullscreenTextarea.value = inputCode.value;
             fullscreenTextarea.readOnly = false;
             fullscreenOverlay.classList.remove('hidden');
+            updateFullscreenHighlighting();
         });
 
         expandOutputButton.addEventListener('click', () => {
@@ -400,6 +467,8 @@
             fullscreenTextarea.value = outputCode.value;
             fullscreenTextarea.readOnly = true;
             fullscreenOverlay.classList.remove('hidden');
+            // ไม่ต้อง highlight สำหรับผลลัพธ์เพราะเป็นโค้ดที่ลบคอมเมนต์แล้ว
+            fullscreenHighlight.innerHTML = '';
         });
 
         closeFullscreenButton.addEventListener('click', () => {
@@ -418,6 +487,7 @@
             }
         });
 
+        // เริ่มต้นการ highlight
         updateHighlighting();
     </script>
 </body>
