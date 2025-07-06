@@ -362,23 +362,29 @@
         pasteButton.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-
+            if (!fullscreenOverlay.classList.contains('hidden')) {
+                return;
+            }
             try {
-                const text = await navigator.clipboard.readText();
-                if (text.trim() !== '') {
-                    inputCode.value = text;
-                    const cleanedCode = removeComments(text);
-                    outputCode.value = cleanedCode;
-                    updateHighlighting();
-                    pasteButton.classList.add('animate-pulse');
-                    pasteButton.textContent = 'วางแล้ว!';
-                    setTimeout(() => {
-                        pasteButton.classList.remove('animate-pulse');
-                        pasteButton.textContent = 'วาง';
-                    }, 1000);
+                if (navigator.clipboard && window.isSecureContext) {
+                    const text = await navigator.clipboard.readText();
+                    if (text.trim() !== '') {
+                        inputCode.value = text;
+                        const cleanedCode = removeComments(text);
+                        outputCode.value = cleanedCode;
+                        updateHighlighting();
+                        pasteButton.classList.add('animate-pulse');
+                        pasteButton.textContent = 'วางแล้ว!';
+                        setTimeout(() => {
+                            pasteButton.classList.remove('animate-pulse');
+                            pasteButton.textContent = 'วาง';
+                        }, 1000);
+                    }
+                } else {
+                    console.warn('Clipboard API ไม่พร้อมใช้งานในบริบทนี้');
                 }
             } catch (err) {
-                console.error('Failed to paste: ', err);
+                console.error('ไม่สามารถวางได้: ', err);
             }
         });
 
