@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remove C# Comments</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -60,25 +61,31 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .bg-gradient {
             background: linear-gradient(135deg, #0f172a, #1e293b);
         }
+
         .bg-card {
             background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(10px);
         }
+
         .click-button {
             transition: all 0.2s ease;
         }
+
         .click-button:hover {
             transform: scale(1.1);
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
         }
+
         .fancy-button {
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
         }
+
         .fancy-button::before {
             content: '';
             position: absolute;
@@ -86,94 +93,327 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.2),
+                    transparent);
             transition: 0.5s;
         }
+
         .fancy-button:hover::before {
             left: 100%;
         }
+
         .fancy-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
         }
+
+        .comment-removed {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-left: 3px solid #ef4444;
+            padding-left: 0.5rem;
+        }
+
+        .highlight-input {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .highlight-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            padding: 1rem;
+            z-index: 1;
+            overflow: auto;
+            background: transparent;
+            color: transparent;
+        }
+
+        .highlight-layer .comment {
+            background-color: rgba(239, 68, 68, 0.3);
+            border-radius: 3px;
+            padding: 1px 2px;
+        }
+
+        .input-textarea {
+            position: relative;
+            z-index: 2;
+            background: transparent;
+            color: #f1f5f9;
+        }
+
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+        }
+
+        .fullscreen-textarea {
+            flex: 1;
+            margin-top: 1rem;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: #f1f5f9;
+            font-family: 'Mali', sans-serif;
+            font-size: 16px;
+            resize: none;
+        }
+
+        .icon-button {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            border: 1px solid #38bdf8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-button:hover {
+            background: rgba(56, 189, 248, 0.3);
+            transform: scale(1.1);
+        }
     </style>
 </head>
-<body class="bg-gradient text-gray-100 font-['Kanit'] min-h-screen flex items-center justify-center">
-    <div class="container mx-auto px-4 max-w-4xl">
+
+<body class="bg-gradient text-gray-100 font-['Mali'] min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4 max-w-6xl">
         <div class="bg-card rounded-2xl p-8 mx-auto border border-slate-700/50 animate-fade-in">
             <h1 class="text-4xl font-bold gradient-text mb-6 text-center">ลบคอมเมนต์ในโค้ด C#</h1>
-            <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex flex-col lg:flex-row gap-4">
                 <div class="flex-1">
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-lg">โค้ด C# (วางโค้ดที่มีคอมเมนต์):</label>
-                        <button id="pasteButton" class="click-button fancy-button bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600">วาง</button>
+                        <div class="flex gap-2">
+                            <button id="expandInputButton" class="icon-button" title="ขยายเต็มจอ">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                                </svg>
+                            </button>
+                            <button id="pasteButton"
+                                class="click-button fancy-button bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600">วาง</button>
+                        </div>
                     </div>
-                    <textarea id="inputCode" class="w-full h-96 bg-slate-800/50 text-gray-100 p-4 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="วางโค้ด C# ที่นี่..."></textarea>
+                    <div class="highlight-input">
+                        <div id="highlightLayer"
+                            class="highlight-layer bg-slate-800/50 rounded-lg border border-slate-700"></div>
+                        <textarea id="inputCode"
+                            class="input-textarea w-full h-96 p-4 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="วางโค้ด C# ที่นี่..."></textarea>
+                    </div>
                 </div>
                 <div class="flex-1">
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-lg">ผลลัพธ์ (โค้ดที่ลบคอมเมนต์):</label>
-                        <button id="copyButton" class="click-button fancy-button bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600">คัดลอก</button>
+                        <div class="flex gap-2">
+                            <button id="expandOutputButton" class="icon-button" title="ขยายเต็มจอ">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                                </svg>
+                            </button>
+                            <button id="copyButton"
+                                class="click-button fancy-button bg-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-600">คัดลอก</button>
+                        </div>
                     </div>
-                    <textarea id="outputCode" class="w-full h-96 bg-slate-800/50 text-gray-100 p-4 rounded-lg border border-slate-700 focus:outline-none" readonly></textarea>
+                    <textarea id="outputCode"
+                        class="w-full h-96 bg-slate-800/50 text-gray-100 p-4 rounded-lg border border-slate-700 focus:outline-none"
+                        readonly></textarea>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Fullscreen Overlay -->
+    <div id="fullscreenOverlay" class="fullscreen-overlay hidden">
+        <div class="flex justify-between items-center">
+            <h2 id="fullscreenTitle" class="text-2xl font-bold gradient-text">แสดงเต็มจอ</h2>
+            <button id="closeFullscreenButton"
+                class="click-button fancy-button bg-red-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-600">ปิด</button>
+        </div>
+        <textarea id="fullscreenTextarea" class="fullscreen-textarea" readonly></textarea>
+    </div>
+
     <script>
         const inputCode = document.getElementById('inputCode');
         const outputCode = document.getElementById('outputCode');
         const copyButton = document.getElementById('copyButton');
         const pasteButton = document.getElementById('pasteButton');
+        const highlightLayer = document.getElementById('highlightLayer');
+        const expandInputButton = document.getElementById('expandInputButton');
+        const expandOutputButton = document.getElementById('expandOutputButton');
+        const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+        const fullscreenTitle = document.getElementById('fullscreenTitle');
+        const fullscreenTextarea = document.getElementById('fullscreenTextarea');
+        const closeFullscreenButton = document.getElementById('closeFullscreenButton');
+
+        function highlightComments(code) {
+            return code
+                .replace(/(?<!https?:)(\/\/.*$)/gm, '<span class="comment">$1</span>')
+                .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="comment">$1</span>');
+        }
 
         function removeComments(code) {
-            // Remove single-line comments (//) but preserve URLs starting with http:// or https://
+
             let result = code.replace(/(?<!https?:)\/\/.*$/gm, '');
-            // Remove multi-line comments (/* */)
+
             result = result.replace(/\/\*[\s\S]*?\*\//g, '');
-            // Remove extra blank lines
+
             result = result.replace(/\n\s*\n/g, '\n').trim();
             return result;
+        }
+
+        function updateHighlighting() {
+            const code = inputCode.value;
+            const highlighted = highlightComments(code);
+            highlightLayer.innerHTML = highlighted;
+        }
+
+        function syncScroll() {
+            highlightLayer.scrollTop = inputCode.scrollTop;
+            highlightLayer.scrollLeft = inputCode.scrollLeft;
         }
 
         inputCode.addEventListener('input', () => {
             const code = inputCode.value;
             const cleanedCode = removeComments(code);
             outputCode.value = cleanedCode;
+            updateHighlighting();
         });
 
-        copyButton.addEventListener('click', () => {
-            outputCode.select();
-            navigator.clipboard.writeText(outputCode.value);
-            copyButton.classList.add('animate-pulse');
-            copyButton.textContent = 'คัดลอกแล้ว!';
-            setTimeout(() => {
-                copyButton.classList.remove('animate-pulse');
-                copyButton.textContent = 'คัดลอก';
-            }, 1000);
+        inputCode.addEventListener('scroll', syncScroll);
+
+        copyButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(outputCode.value).then(() => {
+                    copyButton.classList.add('animate-pulse');
+                    copyButton.textContent = 'คัดลอกแล้ว!';
+                    setTimeout(() => {
+                        copyButton.classList.remove('animate-pulse');
+                        copyButton.textContent = 'คัดลอก';
+                    }, 1000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+
+                    fallbackCopyTextToClipboard(outputCode.value);
+                });
+            } else {
+
+                fallbackCopyTextToClipboard(outputCode.value);
+            }
         });
 
-        pasteButton.addEventListener('click', async () => {
+        function fallbackCopyTextToClipboard(text) {
+
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                copyButton.classList.add('animate-pulse');
+                copyButton.textContent = 'คัดลอกแล้ว!';
+                setTimeout(() => {
+                    copyButton.classList.remove('animate-pulse');
+                    copyButton.textContent = 'คัดลอก';
+                }, 1000);
+            } catch (err) {
+                console.error('Fallback: Could not copy text: ', err);
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        pasteButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
             try {
                 const text = await navigator.clipboard.readText();
-                inputCode.value = text;
-                const cleanedCode = removeComments(text);
-                outputCode.value = cleanedCode;
-                pasteButton.classList.add('animate-pulse');
-                pasteButton.textContent = 'วางแล้ว!';
-                setTimeout(() => {
-                    pasteButton.classList.remove('animate-pulse');
-                    pasteButton.textContent = 'วาง';
-                }, 1000);
+                if (text.trim() !== '') {
+                    inputCode.value = text;
+                    const cleanedCode = removeComments(text);
+                    outputCode.value = cleanedCode;
+                    updateHighlighting();
+                    pasteButton.classList.add('animate-pulse');
+                    pasteButton.textContent = 'วางแล้ว!';
+                    setTimeout(() => {
+                        pasteButton.classList.remove('animate-pulse');
+                        pasteButton.textContent = 'วาง';
+                    }, 1000);
+                }
             } catch (err) {
                 console.error('Failed to paste: ', err);
             }
         });
+
+        expandInputButton.addEventListener('click', () => {
+            fullscreenTitle.textContent = 'โค้ด C# (วางโค้ดที่มีคอมเมนต์)';
+            fullscreenTextarea.value = inputCode.value;
+            fullscreenTextarea.readOnly = false;
+            fullscreenOverlay.classList.remove('hidden');
+        });
+
+        expandOutputButton.addEventListener('click', () => {
+            fullscreenTitle.textContent = 'ผลลัพธ์ (โค้ดที่ลบคอมเมนต์)';
+            fullscreenTextarea.value = outputCode.value;
+            fullscreenTextarea.readOnly = true;
+            fullscreenOverlay.classList.remove('hidden');
+        });
+
+        closeFullscreenButton.addEventListener('click', () => {
+            if (!fullscreenTextarea.readOnly) {
+                inputCode.value = fullscreenTextarea.value;
+                const cleanedCode = removeComments(fullscreenTextarea.value);
+                outputCode.value = cleanedCode;
+                updateHighlighting();
+            }
+            fullscreenOverlay.classList.add('hidden');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !fullscreenOverlay.classList.contains('hidden')) {
+                closeFullscreenButton.click();
+            }
+        });
+
+        updateHighlighting();
     </script>
 </body>
+
 </html>
